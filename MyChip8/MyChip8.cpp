@@ -1,40 +1,39 @@
-#include "Chip8.h"
 #include <iostream>
-#include <thread> // Para sleep (opcional, para não rodar rápido demais)
-#include <chrono>
+#include "Chip8.h"
+#include <SFML/Graphics.hpp> // Biblioteca Gráfica
 
 int main() {
+    // Configura uma janela de 640x320 pixels
+    // (O Chip8 original é 64x32, então multiplicamos por 10 para ver melhor)
+    sf::RenderWindow window(sf::VideoMode(640, 320), "Emulador Chip-8");
+
     Chip8 chip8;
 
-    // GAMBIARRA EDUCACIONAL: Vamos injetar código na memória manualmente
-    // em vez de carregar um arquivo, só para testar o ciclo.
+    // Loop do Jogo (Game Loop)
+    while (window.isOpen()) {
+        // 1. Verifica eventos (como clicar no X para fechar)
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
 
-    // Instrução 1: 0xA2F0 -> Define o Index (I) para 0x2F0
-    // Lembre-se: Memória começa em 0x200
-    // chip8.memory é privado, então por enquanto vamos ter que confiar na lógica
-    // ou tornar memory publico temporariamente para testar.
-
-    // Nota: Para este teste, vá no Chip8.h e mova 'memory' para 'public' rapidinho.
-
-    chip8.memory[0x200] = 0xA2;
-    chip8.memory[0x201] = 0xF0;
-
-    // Instrução 2: 0x1200 -> Jump para 0x200 (Loop infinito)
-    chip8.memory[0x202] = 0x12;
-    chip8.memory[0x203] = 0x00;
-
-    // Loop principal de emulação
-    for (int i = 0; i < 5; ++i) { // Rodar 10 ciclos
+        // 2. Atualiza a CPU (Emulação)
         chip8.cycle();
 
-        std::cout << "Ciclo: " << i
-            << " | PC: 0x" << std::hex << chip8.pc
-            << " | Opcode Lido: 0x" << std::hex << chip8.opcode
-            << " | Reg I: 0x" << std::hex << chip8.index
-            << std::endl;
+        // 3. Desenha na tela (Renderização)
+        window.clear(sf::Color::Black); // Limpa com preto
+
+        // (Aqui depois vamos desenhar os pixels do Chip8)
+
+        // Exemplo: Desenhando um quadrado branco só para testar
+        sf::RectangleShape rect(sf::Vector2f(50, 50));
+        rect.setFillColor(sf::Color::White);
+        rect.setPosition(100, 100);
+        window.draw(rect);
+
+        window.display(); // Mostra o frame
     }
 
-    // Segura a tela aberta
-    std::cin.get();
     return 0;
 }
