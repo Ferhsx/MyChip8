@@ -35,7 +35,7 @@ void Chip8::loadROM(const char* filename) {
 		file.close();
 
 		for (long i = 0; i < size; ++i) {
-            if((START_ADDRESS + i)){
+            if((START_ADDRESS + i) < 4096){
                 memory[START_ADDRESS + i] = buffer[i];
             }
 		}
@@ -63,12 +63,15 @@ void Chip8::cycle() {
         switch (opcode & 0x000F) {
         case 0x0000: // 00E0: CLS (Clear Screen)
             // Código para limpar a tela vai aqui
-            // memset(video, 0, sizeof(video));
+            memset(video, 0, sizeof(video));
             break;
 
         case 0x000E: // 00EE: RET (Return from subroutine)
             // Código para voltar da subrotina vai aqui
-            // pc = stack[--sp];
+            if (sp > 0) {
+                sp--;
+                pc = stack[sp];
+            }
             break;
         }
         break;
@@ -98,7 +101,60 @@ void Chip8::cycle() {
         index = opcode & 0x0FFF;
         break;
 
-        // ... existem mais opcodes, vamos implementar aos poucos ...
+    case 0xD000: { //DXYN: Draw sprite at (Vx, Vy) with height N
+
+        //Pegamos as coordenadas X e Y dos registradores
+        uint8_t Vx = (opcode & 0x0F00) >> 8;
+        uint8_t Vy = (opcode & 0x00F0) >> 4;
+
+        uint8_t xPos = registers[Vx];
+        uint8_t yPos = registers[Vy];
+
+        uint8_t height = opcode & 0x000F;
+
+        // resetar o registrador de colisão (VF) para 0
+
+        registers[0xF] = 0;
+
+        // loop para cada linha do sprite (altura)
+
+        for (unsigned int row = 0; row < height; ++row) {
+            uint8_t spriteByte = memory[index + row];
+
+            //loop para cada coluna (pixel) do sprite (sempre 8 bits)
+
+            for (unsigned int col = 0; col < 8; ++col) {
+                uint8_t spritePixel = spriteByte & (0x80 >> col);
+
+                //se o pixel  do prite for 1 (aceso), precisamos desenhar
+                if (spritePixel != 0) {
+                    //calcula a posição exata no array de video 1d
+
+                    //(y * largura) + x
+                    //o %64 e %32 fazem o sprite "dar a volta" na tela se sair da borda (Wrapping)
+                    int screenIndex = ((xPos + col) % 64) + (((yPos + row) % 32) * 64);
+
+                    //5 verifica colisão 
+                    //se o pixel na tela já é branco (0xFFFFFFFF), vamos apagá-lo.
+
+                    if (video[screenIndex] == 0xFFFFFFFF) {
+                        registers[0xF] = 1; //dectação de colisão
+                    }
+
+                    //Desenha agora usando XOR (^)
+                    // se era preto(0) ^ Branco(1) -> branco(1)
+                    //se era branco(1) ^ branco(1) -> preto(0)
+
+                    video[screenIndex] ^= 0xFFFFFFFF;
+
+                }
+            }
+        }
+    }
+
+    break;
+
+     
 
     default:
         std::cout << "Opcode desconhecido: 0x" << std::hex << opcode << std::endl;
