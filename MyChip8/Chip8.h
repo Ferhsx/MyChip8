@@ -6,10 +6,12 @@ public:
     Chip8();
     void loadROM(const char* filename);
     void cycle();
+    void updateTimers();
 
     // A Tela e o Teclado são públicos para o main.cpp poder ler e escrever neles
     uint32_t video[64 * 32];
     uint8_t keypad[16];
+
 
 private:
     uint8_t memory[4096];

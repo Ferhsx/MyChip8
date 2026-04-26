@@ -202,8 +202,10 @@ void Chip8::cycle() {
         }
         break;
     }
+}
 
-    // --- TIMERS ---
+// --- TIMERS ---
+void Chip8::updateTimers() {
     if (delayTimer > 0) --delayTimer;
     if (soundTimer > 0) --soundTimer;
 }

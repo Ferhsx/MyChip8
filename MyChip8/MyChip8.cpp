@@ -55,6 +55,8 @@ int main() {
             chip8.cycle();
         }
 
+        chip8.updateTimers();
+
         // Atualiza a tela
         texture.update((uint8_t*)chip8.video);
         window.clear(sf::Color::Black);
